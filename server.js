@@ -1,0 +1,255 @@
+require('dotenv').config();
+const express = require('express');
+const app = express();
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Models
+const Teacher = require('./models/Teacher');
+const Batch = require('./models/Batch');
+const Review = require('./models/Review');
+
+// Middleware
+const auth = require('./middleware/auth');
+
+const PORT = process.env.PORT || 4000;
+
+// CORS
+app.use(cors({
+  origin: process.env.FRONTEND_ORIGIN || '*',
+  credentials: true
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ensure uploads dir exists
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
+
+// multer setup
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: function (req, file, cb) {
+    const ts = Date.now();
+    cb(null, ts + '_' + file.originalname.replace(/\s+/g, '_'));
+  }
+});
+const upload = multer({ storage });
+
+// connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+.then(()=> console.log('MongoDB connected'))
+.catch(err => { console.error('Mongo connect error', err); process.exit(1); });
+
+/** ---------------------------
+ * Serve frontend files
+ * --------------------------- */
+app.use(express.static(path.join(__dirname, 'public'))); // 'public' folder for frontend
+
+// For SPA routing or any unknown route, send index.html
+app.get('*', (req, res, next) => {
+  const apiRoutes = ['/register','/teacher-login','/forgot-password','/batches','/studentinfo','/saveReview','/submitReview','/reviews'];
+  if (apiRoutes.some(r => req.path.startsWith(r))) {
+    return next(); // let API routes handle these
+  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+/** ---------------------------
+ * API ROUTES (unchanged)
+ * --------------------------- */
+
+// Register teacher
+app.post('/register', async (req, res) => {
+  try {
+    const { fullname, department, password } = req.body;
+    if (!fullname || !password) return res.status(400).json({ message: 'fullname and password required' });
+
+    const existing = await Teacher.findOne({ fullname });
+    if (existing) return res.status(400).json({ message: 'User already exists' });
+
+    const hash = await bcrypt.hash(password, 10);
+    const teacher = new Teacher({ fullname, department, passwordHash: hash });
+    await teacher.save();
+
+    return res.json({ message: 'Registration successful' });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Login
+app.post('/teacher-login', async (req, res) => {
+  try {
+    const { fullname, password } = req.body;
+    const teacher = await Teacher.findOne({ fullname });
+    if (!teacher) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const ok = await bcrypt.compare(password, teacher.passwordHash);
+    if (!ok) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const token = jwt.sign({ id: teacher._id, fullname: teacher.fullname }, process.env.JWT_SECRET, { expiresIn: '12h' });
+    return res.json({ message: 'Login successful', token });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Forgot password (stub)
+app.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  return res.json({
+    message: `Password reset is not automated yet. Please contact the administrator. (You entered: ${email})`
+  });
+});
+
+// Add batch
+app.post('/batches', auth, async (req, res) => {
+  try {
+    const teacherId = req.teacherId;
+    const { className, batchName } = req.body;
+
+    const batch = new Batch({ teacher: teacherId, className, batchName, projectTitle: '', students: [] });
+    await batch.save();
+
+    return res.json({ message: 'Batch added', batch });
+  } catch {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get batches for section
+app.get('/batches/:section', auth, async (req, res) => {
+  try {
+    const teacherId = req.teacherId;
+    const section = req.params.section;
+    const batches = await Batch.find({ teacher: teacherId, className: section }).lean();
+    return res.json(batches);
+  } catch {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Save student info
+app.post('/studentinfo', auth, async (req, res) => {
+  try {
+    const teacherId = req.teacherId;
+    const { batch, projectTitle, students } = req.body;
+
+    let existing = await Batch.findOne({ teacher: teacherId, batchName: batch });
+    if (!existing) {
+      existing = new Batch({ teacher: teacherId, batchName: batch, projectTitle, students });
+    } else {
+      existing.projectTitle = projectTitle;
+      existing.students = students;
+    }
+    await existing.save();
+    return res.json({ message: 'Student info saved', record: existing });
+  } catch {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/studentinfo', auth, async (req, res) => {
+  try {
+    const teacherId = req.teacherId;
+    const batches = await Batch.find({ teacher: teacherId }).lean();
+    return res.json(batches);
+  } catch {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Save review
+app.post('/saveReview', auth, upload.array('files'), async (req, res) => {
+  try {
+    const teacherId = req.teacherId;
+    const reviewData = JSON.parse(req.body.reviewData || '{}');
+
+    let record = await Review.findOne({ teacher: teacherId, studentRegNo: reviewData.studentId });
+    const files = (req.files || []).map(f => ({
+      originalName: f.originalname,
+      path: `/uploads/${path.basename(f.path)}`,
+      mimeType: f.mimetype
+    }));
+
+    if (!record) {
+      record = new Review({
+        teacher: teacherId,
+        studentRegNo: reviewData.studentId,
+        reviews: reviewData.reviews || [],
+        files
+      });
+    } else {
+      record.reviews = reviewData.reviews || record.reviews;
+      record.files = record.files.concat(files);
+      record.submitted = false;
+    }
+    await record.save();
+    return res.json({ message: 'Review saved' });
+  } catch {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Submit review
+app.post('/submitReview', auth, upload.array('files'), async (req, res) => {
+  try {
+    const teacherId = req.teacherId;
+    const reviewData = JSON.parse(req.body.reviewData || '{}');
+
+    let record = await Review.findOne({ teacher: teacherId, studentRegNo: reviewData.studentId });
+    const files = (req.files || []).map(f => ({
+      originalName: f.originalname,
+      path: `/uploads/${path.basename(f.path)}`,
+      mimeType: f.mimetype
+    }));
+
+    if (!record) {
+      record = new Review({
+        teacher: teacherId,
+        studentRegNo: reviewData.studentId,
+        reviews: reviewData.reviews || [],
+        files,
+        submitted: true
+      });
+    } else {
+      record.reviews = reviewData.reviews || record.reviews;
+      record.files = record.files.concat(files);
+      record.submitted = true;
+    }
+    await record.save();
+    return res.json({ message: 'Review submitted' });
+  } catch {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get reviews
+app.get('/reviews', auth, async (req, res) => {
+  try {
+    const teacherId = req.teacherId;
+    const studentId = req.query.studentId;
+    const records = await Review.find({ teacher: teacherId, studentRegNo: studentId }).lean();
+    return res.json(records);
+  } catch {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// serve uploaded files
+app.use('/uploads', express.static(UPLOAD_DIR));
+
+// simple backend check
+app.get('/', (req, res) => res.json({ message: 'Backend running' }));
+
+// Start server
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

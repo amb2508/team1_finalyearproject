@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Documents Page with Persistent Reviews</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background-color: #072a8cfb;
+      color: white;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .left-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .back-btn, .right-buttons button {
+      background: white;
+      color: black;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-top: 3px;
+    }
+    .page-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      font-size: 24px;
+      color: white;
+    }
+    .review-tabs {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .review-tabs button {
+      margin: 0 5px;
+      padding: 10px 20px;
+      background-color: #e0e0e0;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .review-tabs button.active {
+      background-color: #072a8cfb;
+      color: white;
+    }
+    .review {
+      display: none;
+      background-color: #fff;
+      margin: 20px auto;
+      width: 80%;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+      text-align: center;
+    }
+    .note-section {
+      margin-left: 10%;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .button-container {
+      margin: 20px auto;
+      width: 80%;
+      text-align: right;
+    }
+    .button-container button {
+      margin-left: 10px;
+      padding: 8px 20px;
+      background-color: #e0e0e0;
+      border: none;
+      cursor: pointer;
+    }
+    .button-container button:hover {
+      background-color: #d5d5d5;
+    }
+    input[type="text"], input[type="number"], textarea {
+      width: 90%;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    input[type="file"] {
+      margin-top: 5px;
+    }
+    .marks-input {
+      width: 60px;
+      text-align: center;
+    }
+    .file-links {
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    .file-links a {
+      margin-right: 10px;
+      text-decoration: underline;
+      color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="left-header">
+    <button class="back-btn" onclick="goBack()">&#8617; BACK</button>
+    <h1 class="page-title">DOCUMENTS PAGE</h1>
+  </div>
+  <div class="right-header">
+    <img src="images/logoCh.png" alt="Christ University Logo" class="logo" style="width: 200px; height: 100px; object-fit: contain; margin-bottom: 5px;" />
+    <div class="right-buttons">
+      <button onclick="home()">🏠 Home</button>
+      <button onclick="signOut()">🚪 Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center; margin: 15px 0;">
+  <div id="batchStudentHeader" style="margin: 24px 0;">
+    <h2 id="batchLabel" style="margin-bottom: 8px; color: #072a8c;"></h2>
+    <label for="studentDropdown" style="font-weight: bold;">Select Student:</label>
+    <select id="studentDropdown" style="padding: 4px 12px; font-size: 16px;"></select>
+  </div>
+</div>
+
+<!-- Review Tabs -->
+<div class="review-tabs">
+  <button onclick="showReview(0)" id="tab-0" class="active">0th Review</button>
+  <button onclick="showReview(1)" id="tab-1">1st Review</button>
+  <button onclick="showReview(2)" id="tab-2">2nd Review</button>
+</div>
+
+<!-- 0th Review -->
+<div id="review-0" class="review" style="display:block;">
+  <h3>0th Review</h3>
+  <label>Upload File: <input type="file" /></label><br /><br />
+  <label>Enter Comments: <textarea rows="3"></textarea></label><br /><br />
+  <h4>Rubrics</h4>
+  <table>
+    <thead><tr><th>Criteria</th><th>Marks</th></tr></thead>
+    <tbody>
+      <tr><td>Domain & Problem Identification</td><td><input type="number" class="marks-input" min="0" max="20" /> /20</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 1st Review -->
+<div id="review-1" class="review">
+  <h3>1st Review</h3>
+  <label>Upload File: <input type="file" /></label><br /><br />
+  <label>Enter Comments: <textarea rows="3"></textarea></label><br /><br />
+  <h4>Rubrics</h4>
+  <table>
+    <thead><tr><th>Criteria</th><th>Marks</th></tr></thead>
+    <tbody>
+      <tr><td>Literature Survey / Background Study</td><td><input type="number" class="marks-input" min="0" max="20" /> /20</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 2nd Review -->
+<div id="review-2" class="review">
+  <h3>2nd Review</h3>
+  <label>Upload File: <input type="file" /></label><br /><br />
+  <label>Enter Comments: <textarea rows="3"></textarea></label><br /><br />
+  <h4>Rubrics</h4>
+  <table>
+    <thead>
+      <tr><th>Criteria</th><th>Marks</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Design / Methodology</td><td><input type="number" class="marks-input" min="0" max="15" /> /15</td></tr>
+      <tr><td>Implementation</td><td><input type="number" class="marks-input" min="0" max="15" /> /15</td></tr>
+      <tr><td>Presentation</td><td><input type="number" class="marks-input" min="0" max="15" /> /15</td></tr>
+      <tr><td>Report</td><td><input type="number" class="marks-input" min="0" max="15" /> /15</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note-section">
+  <p>* Please upload PDF Files Only</p>
+  <p>* Marks need to be updated separately for each review</p>
+  <p>* Add comments which can be viewed by students</p>
+</div>
+
+<div class="button-container">
+  <button onclick="save()">SAVE</button>
+  <button onclick="submit()">SUBMIT</button>
+  <button onclick="closePage()">CLOSE</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+const API_BASE = ""; // empty string → same domain as backend
+
+function goBack() { window.location.href = "Studentinfoup (2).html"; }
+function home() { window.location.href = "index.html"; }
+function signOut() { localStorage.removeItem('token'); window.location.href = "login_page.html"; }
+
+async function save() {
+  const reviewData = collectReviewData();
+  if (!reviewData) return;
+  await sendReview('saveReview', reviewData);
+}
+
+async function submit() {
+  const reviewData = collectReviewData();
+  if (!reviewData) return;
+  await sendReview('submitReview', reviewData);
+}
+
+async function sendReview(route, reviewData) {
+  const formData = new FormData();
+  formData.append('reviewData', JSON.stringify(reviewData));
+
+  document.querySelectorAll('.review').forEach((reviewDiv) => {
+    const files = reviewDiv.querySelector('input[type="file"]').files;
+    for (let f of files) formData.append('files', f);
+  });
+
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) { alert("Please login first."); window.location.href = "login_page.html"; return; }
+
+    const res = await axios.post(`${API_BASE}/${route}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data', 'Authorization': 'Bearer ' + token }
+    });
+    alert(res.data.message);
+  } catch (err) {
+    alert("Error submitting review");
+    console.error(err);
+  }
+}
+
+function collectReviewData() {
+  const studentDropdown = document.getElementById('studentDropdown');
+  const studentId = studentDropdown.value;
+  if (!studentId) { alert('Please select a student before saving.'); return null; }
+
+  let reviews = [];
+  document.querySelectorAll('.review').forEach((reviewDiv, index) => {
+    let marks = [];
+    reviewDiv.querySelectorAll('.marks-input').forEach(input => {
+      marks.push({ criteria: input.closest('tr').children[0].innerText, mark: input.value });
+    });
+    reviews.push({ reviewNumber: index, comments: reviewDiv.querySelector('textarea').value, marks: marks });
+  });
+  return { studentId, reviews };
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) { alert('Please login first.'); window.location.href = 'login_page.html'; return; }
+
+    const res = await fetch(`${API_BASE}/studentinfo`, { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+
+    if (!data.length) {
+      document.getElementById('batchLabel').textContent = 'No batch info available';
+      document.getElementById('studentDropdown').style.display = 'none';
+      return;
+    }
+
+    const batchRecord = data[0];
+    document.getElementById('batchLabel').textContent =
+      `Batch: ${batchRecord.batch} | Project: ${batchRecord.projectTitle}`;
+
+    const studentDropdown = document.getElementById('studentDropdown');
+    studentDropdown.innerHTML = '';
+    batchRecord.students.forEach(student => {
+      const option = document.createElement('option');
+      option.value = student.regNo;
+      option.textContent = `${student.name} (${student.regNo})`;
+      studentDropdown.appendChild(option);
+    });
+
+    if (batchRecord.students.length) loadPreviousReviews(batchRecord.students[0].regNo);
+    studentDropdown.onchange = (e) => { loadPreviousReviews(e.target.value); };
+  } catch (error) {
+    alert('Failed to load batch or student data.');
+    console.error(error);
+  }
+});
+
+async function loadPreviousReviews(studentId) {
+  if (!studentId) return;
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) { alert("Please login first."); window.location.href = "login_page.html"; return; }
+
+    const res = await fetch(`${API_BASE}/reviews?studentId=${encodeURIComponent(studentId)}`, { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+
+    if (!data || data.length === 0) { alert("No previous reviews found for this student"); return; }
+
+    document.querySelectorAll('.review').forEach(reviewDiv => {
+      reviewDiv.querySelector('textarea').value = '';
+      reviewDiv.querySelectorAll('.marks-input').forEach(input => input.value = '');
+      const fileLinksDiv = reviewDiv.querySelector('.file-links');
+      if (fileLinksDiv) fileLinksDiv.innerHTML = '';
+    });
+
+    data.forEach(studentReview => {
+      studentReview.reviews.forEach(r => {
+        const reviewDiv = document.getElementById('review-' + r.reviewNumber);
+        if (reviewDiv) {
+          reviewDiv.querySelector('textarea').value = r.comments || '';
+          reviewDiv.querySelectorAll('.marks-input').forEach((input, idx) => {
+            if (r.marks && r.marks[idx]) input.value = r.marks[idx].mark || '';
+          });
+
+          if (studentReview.files && studentReview.files.length > 0) {
+            let fileLinksDiv = reviewDiv.querySelector('.file-links');
+            if (!fileLinksDiv) {
+              fileLinksDiv = document.createElement('div');
+              fileLinksDiv.className = 'file-links';
+              reviewDiv.appendChild(fileLinksDiv);
+            }
+            fileLinksDiv.innerHTML = '';
+            studentReview.files.forEach(file => {
+              const a = document.createElement('a');
+              a.href = `${API_BASE}${file.path}`;
+              a.target = '_blank';
+              a.textContent = file.originalName;
+              fileLinksDiv.appendChild(a);
+              fileLinksDiv.appendChild(document.createElement('br'));
+            });
+          }
+        }
+      });
+    });
+    alert("Previous reviews and documents loaded.");
+  } catch (err) {
+    alert("Error fetching previous reviews");
+    console.error(err);
+  }
+}
+
+function closePage() { window.location.href = "index.html"; }
+
+function showReview(index) {
+  const reviews = document.querySelectorAll('.review');
+  const tabs = document.querySelectorAll('.review-tabs button');
+  reviews.forEach(r => r.style.display = 'none');
+  tabs.forEach(t => t.classList.remove('active'));
+  document.getElementById('review-' + index).style.display = 'block';
+  document.getElementById('tab-' + index).classList.add('active');
+}
+</script>
+
+</body>
+</html>

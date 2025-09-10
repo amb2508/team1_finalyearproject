@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Christ University Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .logo-container {
+      margin-top: 40px;
+    }
+
+    .logo {
+      width: 250px;
+      height: auto;
+    }
+
+    .login-container {
+      background-color: #f9f9f9;
+      padding: 30px;
+      margin: 50px auto;
+      width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+
+    .login-container h2 {
+      margin-bottom: 20px;
+      font-weight: normal;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    label {
+      text-align: left;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    input {
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #1a237e;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0d154f;
+    }
+
+    .forgot {
+      margin-top: 15px;
+      font-size: 13px;
+    }
+
+    .forgot a {
+      text-decoration: none;
+      color: #1a237e;
+    }
+</style>
+</head>
+<body>
+
+  <div class="logo-container">
+    <img src="images/logoCh.png" alt="Christ University Logo" class="logo">
+  </div>
+
+  <div class="login-container">
+    <h2>WELCOME</h2>
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input type="text" id="username" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" required>
+
+      <button type="submit">Sign In</button>
+    </form>
+
+    <p class="forgot">
+      <a href="forgot_password.html" id="Fg">Forgot Password?</a>
+    </p>
+  </div>
+
+<script>
+  // Use dynamic API base
+  const API_BASE = ""; // empty works with relative URL in deployment
+
+  document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const fullname = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!fullname || !password) {
+      alert("Please enter both username and password.");
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${API_BASE}/teacher-login`, { fullname, password });
+
+      alert(res.data.message);  // e.g. "Login successful"
+
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+      } else {
+        alert("No token returned from server!");
+        return;
+      }
+
+      // Redirect to batch page or main app page
+      window.location.href = "index.html";
+
+    } catch (err) {
+      alert(err.response?.data?.message || "Login failed. Please check your credentials.");
+      console.error(err);
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Batch Page Correct Alignment</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .navbar {
+      background-color: #072a8cfb;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      flex-shrink: 0;
+    }
+    .navbar img.Logo {
+      height: 70px;
+      margin-right: 20px;
+    }
+    .navbar h1.Batches {
+      flex-grow: 1;
+      font-weight: bold;
+      font-size: 24px;
+    }
+    .nav-links a {
+      color: white;
+      margin-left: 20px;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+
+    /* Page container flex */
+    .page-container {
+      display: flex;
+      flex-grow: 1;
+      height: calc(100vh - 90px); /* header height approx */
+      background: #f9f9f9;
+      overflow-y: auto;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background-color: #072a8cfb;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 15px;
+      flex-shrink: 0;
+    }
+    .sidebar h2 {
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .sidebar button {
+      background-color: #103d9d;
+      border: 2px solid white;
+      padding: 12px;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .sidebar button:hover {
+      background-color: #1c4ed8;
+    }
+
+    /* Main content */
+    .placard-container {
+      flex-grow: 1;
+      padding: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-content: flex-start;
+    }
+    .placard-card {
+      height: 120px;
+      flex: 0 0 220px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      user-select: none;
+    }
+    .placard-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    .add-card {
+      font-size: 40px;
+      color: #072a8c;
+      border: 2px dashed #072a8c;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 900px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .modal-header h3 {
+      margin: 0;
+      color: #072a8c;
+    }
+    .close-btn {
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: bold;
+      color: #333;
+      user-select: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background-color: #072a8c;
+      color: white;
+    }
+    #studentInfoBtn {
+      margin-top: 15px;
+      padding: 8px 15px;
+      background: #072a8c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    #studentInfoBtn:hover {
+      background-color: #054a75;
+    }
+
+</style>
+</head>
+<body>
+
+  <div class="navbar">
+    <img src="images/Christuniversitylogocolour.jpg" alt="Christ Logo" class="Logo" style="height:70px; margin-right:20px;" />
+    <h1 class="Batches">Batches Page</h1>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="Studentinfoup (2).html">Entry</a>
+      <a href="Documents.html">Documents</a>
+      <a href="registration.html">Register</a>
+      <a href="#" onclick="signOut()">Sign Out</a>
+    </nav>
+  </div>
+
+  <div class="page-container" style="display:flex; flex-grow:1;">
+    <div class="sidebar" id="SID">
+      <h2>Sections</h2>
+      <button onclick="loadBatches('BTCS A')">BTCS A</button>
+      <button onclick="loadBatches('BTCS B')">BTCS B</button>
+      <button onclick="loadBatches('BTCS C')">BTCS C</button>
+      <button onclick="loadBatches('CSE IoT')">CSE IoT</button>
+      <button onclick="loadBatches('MTECH')">MTECH</button>
+    </div>
+
+    <div class="placard-container" id="placard-container"></div>
+  </div>
+
+  <div class="modal" id="studentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle"></h3>
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+      </div>
+      <table id="studentTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Register Number</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button id="studentInfoBtn">Go to Student Info Page</button>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = ""; // dynamic base → works locally or on Render
+  const placardContainer = document.getElementById('placard-container');
+  const modal = document.getElementById('studentModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const studentTableBody = document.querySelector('#studentTable tbody');
+
+  // Track current selected section globally
+  let currentSection = '';
+
+  // On page load
+  window.addEventListener('DOMContentLoaded', () => {
+    const firstButton = document.querySelector('.sidebar button');
+    if (firstButton) {
+      currentSection = firstButton.textContent.trim();
+      loadBatches(currentSection);
+    }
+
+    document.querySelectorAll('.sidebar button').forEach(button => {
+      button.addEventListener('click', () => {
+        currentSection = button.textContent.trim();
+        loadBatches(currentSection);
+      });
+    });
+  });
+
+  async function loadBatches(section) {
+    const container = placardContainer;
+    container.innerHTML = '';
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/batches/${encodeURIComponent(section)}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!response.ok) throw new Error('Network response was not ok');
+      const batches = await response.json();
+
+      batches.forEach(batch => {
+        const card = document.createElement('div');
+        card.className = 'placard-card';
+        card.textContent = `${batch.className} - ${batch.batchName}`;
+        card.onclick = () => openModal(batch);
+        container.appendChild(card);
+      });
+
+      const addCard = document.createElement('div');
+      addCard.className = 'placard-card add-card';
+      addCard.textContent = '+';
+      addCard.onclick = () => addBatch(section);
+      container.appendChild(addCard);
+
+    } catch (error) {
+      container.innerHTML = '<p>Error loading batches.</p>';
+      console.error('Failed to load batches:', error);
+    }
+  }
+
+  async function addBatch(section) {
+    const batchName = prompt('Enter new batch name:');
+    if (!batchName) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/batches`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ className: section, batchName: batchName.trim() })
+      });
+      if (!res.ok) throw new Error('Failed to add batch');
+      await loadBatches(section);
+    } catch (err) {
+      alert('Failed to add batch.');
+      console.error('Error adding batch:', err);
+    }
+  }
+
+  function openModal(batch) {
+    modalTitle.textContent = `${batch.className} - ${batch.batchName}`;
+    studentTableBody.innerHTML = '';
+
+    if (!batch.students || batch.students.length === 0) {
+      studentTableBody.innerHTML = `<tr><td colspan="2">No students found in this batch.</td></tr>`;
+    } else {
+      batch.students.forEach(student => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${student.name || '-'}</td><td>${student.regNo || '-'}</td>`;
+        studentTableBody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('studentInfoBtn').onclick = () => {
+      window.location.href = encodeURI('Studentinfoup (2).html');
+    };
+
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
+  }
+
+  function signOut() {
+    localStorage.removeItem('token');
+    window.location.href = 'login_page.html';
+  }
+</script>
+
+</body>
+</html>

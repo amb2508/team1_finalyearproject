@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Information</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f5;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #072a8cfb;
+      color: white;
+      padding: 15px;
+    }
+    .header-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn {
+      background-color: #005a9c;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .btn:hover {
+      background-color: #003f70;
+    }
+    .btn.small {
+      font-size: 14px;
+      padding: 6px 10px;
+      background-color: white;
+      color: #005a9c;
+      border: 1px solid #005a9c;
+    }
+    .btn.small:hover {
+      background-color: #e6f0fa;
+    }
+    .box {
+      background-color: white;
+      width: 90%;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="number"] {
+      width: 95%;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    input[type="number"] {
+      max-width: 80px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #005a9c;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #d6e9f8;
+    }
+    .center {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .action-btn {
+      padding: 4px 8px;
+      font-size: 12px;
+      background-color: #dc3545;
+      border-radius: 4px;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .action-btn:hover {
+      background-color: #a71d2a;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-buttons">
+    <button onclick="goBack()" class="btn small">⬅ Back</button>
+    <div style="text-align: center;">
+      <h2 style="margin: 0;">CHRIST</h2>
+      <p style="margin: 2px 0;">Deemed to be University</p>
+    </div>
+    <button onclick="signOut()" class="btn small">Sign Out 🔒</button>
+  </div>
+</header>
+
+<div class="box">
+  <!-- Batch selection -->
+  <label><strong>Batch:</strong></label>
+  <input type="text" id="batchInput" placeholder="Enter or switch batch number"><br>
+  <!-- Project title -->
+  <label><strong>Project Title:</strong></label>
+  <input type="text" id="projectTitle" placeholder="Enter project title"><br>
+
+  <form id="studentForm">
+    <table id="studentTable">
+      <thead>
+        <tr>
+          <th>Reg. No</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th style="width:80px;">Marks</th>
+          <th>Comments</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows will be dynamically generated -->
+      </tbody>
+    </table>
+
+    <div class="center">
+      <button type="button" class="btn" onclick="addRow()">Add New Student</button>
+      <button type="submit" class="btn">Save Data</button>
+      <a href="documents.html" class="btn">View Documents</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  const API_BASE = ""; // relative URL for deployment
+  const studentTableBody = document.querySelector('#studentTable tbody');
+
+  // Load saved student info on page load with token authentication
+  window.addEventListener('DOMContentLoaded', loadStudentInfo);
+
+  async function loadStudentInfo() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("Please login first.");
+        window.location.href = "login_page.html";
+        return;
+      }
+      const res = await fetch(`${API_BASE}/studentinfo`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      if (data.length === 0) {
+        addRow();  // Start with one empty row if no saved data
+        return;
+      }
+      const record = data[0];
+      document.getElementById('batchInput').value = record.batch || '';
+      document.getElementById('projectTitle').value = record.projectTitle || '';
+      studentTableBody.innerHTML = '';
+      record.students.forEach((student, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><input type="number" name="reg${index}" required value="${student.regNo || ''}"></td>
+          <td><input type="text" name="name${index}" required value="${student.name || ''}"></td>
+          <td><input type="email" name="email${index}" required value="${student.email || ''}"></td>
+          <td><input type="number" name="marks${index}" min="0" max="100" required value="${student.marks || ''}"></td>
+          <td><input type="text" name="comment${index}" value="${student.comments || ''}"></td>
+          <td><button type="button" class="action-btn" onclick="deleteRow(this)">Delete</button></td>
+        `;
+        studentTableBody.appendChild(row);
+      });
+    } catch (err) {
+      console.error('Failed to load student info:', err);
+      addRow(); // Add empty row if error
+    }
+  }
+
+  function addRow() {
+    const rowCount = studentTableBody.rows.length;
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><input type="number" name="reg${rowCount}" required></td>
+      <td><input type="text" name="name${rowCount}" required></td>
+      <td><input type="email" name="email${rowCount}" required></td>
+      <td><input type="number" name="marks${rowCount}" min="0" max="100" required></td>
+      <td><input type="text" name="comment${rowCount}"></td>
+      <td><button type="button" class="action-btn" onclick="deleteRow(this)">Delete</button></td>
+    `;
+    studentTableBody.appendChild(row);
+  }
+
+  function deleteRow(button) {
+    const row = button.closest('tr');
+    row.remove();
+  }
+
+  document.getElementById('studentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("Please login first.");
+      window.location.href = "login_page.html";
+      return;
+    }
+
+    const batch = document.getElementById('batchInput').value.trim();
+    const projectTitle = document.getElementById('projectTitle').value.trim();
+
+    if (!batch || !projectTitle) {
+      alert('Please enter batch and project title');
+      return;
+    }
+
+    const students = [];
+
+    for (let i = 0; i < studentTableBody.rows.length; i++) {
+      const row = studentTableBody.rows[i];
+      const student = {
+        regNo: row.querySelector(`input[name="reg${i}"]`).value.trim(),
+        name: row.querySelector(`input[name="name${i}"]`).value.trim(),
+        email: row.querySelector(`input[name="email${i}"]`).value.trim(),
+        marks: row.querySelector(`input[name="marks${i}"]`).value.trim(),
+        comments: row.querySelector(`input[name="comment${i}"]`).value.trim()
+      };
+
+      if (!student.regNo || !student.name || !student.email) {
+        alert('Please fill in all required student fields');
+        return;
+      }
+      students.push(student);
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/studentinfo`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ batch, projectTitle, students })
+      });
+      const result = await res.json();
+      alert(result.message || 'Data saved!');
+    } catch (err) {
+      console.error('Error saving data:', err);
+      alert('Failed to save data');
+    }
+  });
+
+  function goBack() {
+    window.history.back();
+  }
+
+  function signOut() {
+    localStorage.removeItem('token');
+    window.location.href = 'login_page.html';
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teacher Registration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    .logo-container {
+      margin-top: 40px;
+    }
+    .logo {
+      width: 250px;
+      height: auto;
+    }
+    .register-container {
+      background-color: #f9f9f9;
+      padding: 30px;
+      margin: 50px auto;
+      width: 320px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    .register-container h2 {
+      margin-bottom: 20px;
+      font-weight: normal;
+      color: #1a237e;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    label {
+      text-align: left;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #333;
+    }
+    input, select {
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    button {
+      background-color: #1a237e;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0d154f;
+    }
+    .back-link {
+      margin-top: 15px;
+      font-size: 13px;
+      display: block;
+      text-decoration: none;
+      color: #1a237e;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo-container">
+    <img src="images/logoCh.png" alt="Christ University Logo" class="logo">
+  </div>
+
+  <div class="register-container">
+    <h2>Teacher Registration</h2>
+    <form id="teacherForm">
+      <label for="fullname">Full Name</label>
+      <input type="text" id="fullname" required>
+
+      <label for="department">Department</label>
+      <select id="department" required>
+        <option value="">-- Select Department --</option>
+        <option value="CSE">Computer Science and Engineering (CSE)</option>
+        <option value="AIML">Artificial Intelligence & Machine Learning (AIML)</option>
+        <option value="EEE">Electrical and Electronics Engineering (EEE)</option>
+        <option value="ECE">Electronics and Communication Engineering (ECE)</option>
+        <option value="CIVIL">Civil Engineering</option>
+        <option value="MECHANICAL">Mechanical Engineering</option>
+      </select>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" required>
+
+      <button type="submit">Register</button>
+    </form>
+
+    <a href="login_page.html" class="back-link">← Back to Login</a>
+  </div>
+
+  <script>
+    const API_BASE = ""; // empty string allows relative URL for deployment
+
+    document.getElementById("teacherForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const fullname = document.getElementById("fullname").value.trim();
+      const department = document.getElementById("department").value;
+      const password = document.getElementById("password").value;
+
+      if (!fullname || !department || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fullname, department, password })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("Registration Successful! Please login.");
+          window.location.href = "login_page.html";
+        } else {
+          alert(data.message); // backend error message
+        }
+      } catch (err) {
+        alert("Unable to connect to the server. Please try again later.");
+        console.error(err);
+      }
+    });
+  </script>
+
+</body>
+</html>
