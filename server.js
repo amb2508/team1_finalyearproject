@@ -52,7 +52,7 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(()=> console.log('✅ MongoDB connected'))
+.then(() => console.log('✅ MongoDB connected'))
 .catch(err => {
   console.error('❌ MongoDB connection error:', err.message);
   process.exit(1);
@@ -63,17 +63,19 @@ mongoose.connect(process.env.MONGO_URI, {
  * --------------------------- */
 app.use(express.static(path.join(__dirname, 'public')));
 
-// For SPA routing or any unknown route, send index.html
-app.get('*', (req, res, next) => {
+// Serve SPA safely (avoid path-to-regexp error)
+app.use((req, res, next) => {
   const apiRoutes = [
     '/register','/teacher-login','/forgot-password',
     '/batches','/studentinfo','/saveReview',
     '/submitReview','/reviews'
   ];
-  if (apiRoutes.some(r => req.path.startsWith(r))) {
-    return next(); // let API routes handle these
+  if (apiRoutes.some(r => req.path.startsWith(r))) return next(); // skip API routes
+
+  if (req.method === 'GET' && req.headers.accept && req.headers.accept.includes('text/html')) {
+    return res.sendFile(path.join(__dirname, 'public', 'index.html'));
   }
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  next();
 });
 
 /** ---------------------------
@@ -84,9 +86,7 @@ app.get('*', (req, res, next) => {
 app.post('/register', async (req, res) => {
   try {
     const { fullname, department, password } = req.body;
-    if (!fullname || !password) {
-      return res.status(400).json({ message: 'Fullname and password required' });
-    }
+    if (!fullname || !password) return res.status(400).json({ message: 'Fullname and password required' });
 
     const existing = await Teacher.findOne({ fullname });
     if (existing) return res.status(400).json({ message: 'User already exists' });
