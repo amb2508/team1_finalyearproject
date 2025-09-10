@@ -238,11 +238,17 @@
   const modalTitle = document.getElementById('modalTitle');
   const studentTableBody = document.querySelector('#studentTable tbody');
 
-  // Track current selected section globally
   let currentSection = '';
 
-  // On page load
   window.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+
+    // Redirect to registration page if not logged in
+    if (!token) {
+      window.location.href = 'registration.html';
+      return; // stop executing the rest
+    }
+
     const firstButton = document.querySelector('.sidebar button');
     if (firstButton) {
       currentSection = firstButton.textContent.trim();
