@@ -69,8 +69,9 @@ app.use((req, res, next) => {
   ];
   if (apiRoutes.some(r => req.path.startsWith(r))) return next(); // skip API routes
 
+  // Serve registration.html as default page
   if (req.method === 'GET' && req.headers.accept && req.headers.accept.includes('text/html')) {
-    return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    return res.sendFile(path.join(__dirname, 'public', 'registration.html'));
   }
   next();
 });
