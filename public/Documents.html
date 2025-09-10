@@ -144,14 +144,12 @@
   </div>
 </div>
 
-<!-- Review Tabs -->
 <div class="review-tabs">
   <button onclick="showReview(0)" id="tab-0" class="active">0th Review</button>
   <button onclick="showReview(1)" id="tab-1">1st Review</button>
   <button onclick="showReview(2)" id="tab-2">2nd Review</button>
 </div>
 
-<!-- 0th Review -->
 <div id="review-0" class="review" style="display:block;">
   <h3>0th Review</h3>
   <label>Upload File: <input type="file" /></label><br /><br />
@@ -165,7 +163,6 @@
   </table>
 </div>
 
-<!-- 1st Review -->
 <div id="review-1" class="review">
   <h3>1st Review</h3>
   <label>Upload File: <input type="file" /></label><br /><br />
@@ -179,7 +176,6 @@
   </table>
 </div>
 
-<!-- 2nd Review -->
 <div id="review-2" class="review">
   <h3>2nd Review</h3>
   <label>Upload File: <input type="file" /></label><br /><br />
@@ -212,29 +208,34 @@
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-const API_BASE = ""; // empty string → same domain as backend
+const API_BASE = "";
 
+// Navigation
 function goBack() { window.location.href = "Studentinfoup (2).html"; }
 function home() { window.location.href = "index.html"; }
 function signOut() { localStorage.removeItem('token'); window.location.href = "login_page.html"; }
 
-async function save() {
-  const reviewData = collectReviewData();
-  if (!reviewData) return;
-  await sendReview('saveReview', reviewData);
-}
+// Save & Submit
+async function save() { await sendReview('saveReview'); }
+async function submit() { await sendReview('submitReview'); }
 
-async function submit() {
-  const reviewData = collectReviewData();
-  if (!reviewData) return;
-  await sendReview('submitReview', reviewData);
-}
+async function sendReview(route) {
+  const studentDropdown = document.getElementById('studentDropdown');
+  const studentId = studentDropdown.value;
+  if (!studentId) { alert('Please select a student before saving.'); return; }
 
-async function sendReview(route, reviewData) {
+  const reviews = [];
+  document.querySelectorAll('.review').forEach((reviewDiv, index) => {
+    const marks = [];
+    reviewDiv.querySelectorAll('.marks-input').forEach(input => {
+      marks.push({ criteria: input.closest('tr').children[0].innerText, mark: input.value });
+    });
+    reviews.push({ reviewNumber: index, comments: reviewDiv.querySelector('textarea').value, marks });
+  });
+
   const formData = new FormData();
-  formData.append('reviewData', JSON.stringify(reviewData));
-
-  document.querySelectorAll('.review').forEach((reviewDiv) => {
+  formData.append('reviewData', JSON.stringify({ studentId, reviews }));
+  document.querySelectorAll('.review').forEach(reviewDiv => {
     const files = reviewDiv.querySelector('input[type="file"]').files;
     for (let f of files) formData.append('files', f);
   });
@@ -253,27 +254,12 @@ async function sendReview(route, reviewData) {
   }
 }
 
-function collectReviewData() {
-  const studentDropdown = document.getElementById('studentDropdown');
-  const studentId = studentDropdown.value;
-  if (!studentId) { alert('Please select a student before saving.'); return null; }
-
-  let reviews = [];
-  document.querySelectorAll('.review').forEach((reviewDiv, index) => {
-    let marks = [];
-    reviewDiv.querySelectorAll('.marks-input').forEach(input => {
-      marks.push({ criteria: input.closest('tr').children[0].innerText, mark: input.value });
-    });
-    reviews.push({ reviewNumber: index, comments: reviewDiv.querySelector('textarea').value, marks: marks });
-  });
-  return { studentId, reviews };
-}
-
+// Load students on page load
 window.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) { alert('Please login first.'); window.location.href = 'login_page.html'; return; }
+  const token = localStorage.getItem('token');
+  if (!token) { alert('Please login first.'); window.location.href = 'login_page.html'; return; }
 
+  try {
     const res = await fetch(`${API_BASE}/studentinfo`, { headers: { 'Authorization': 'Bearer ' + token } });
     const data = await res.json();
 
@@ -297,10 +283,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
 
     if (batchRecord.students.length) loadPreviousReviews(batchRecord.students[0].regNo);
-    studentDropdown.onchange = (e) => { loadPreviousReviews(e.target.value); };
-  } catch (error) {
+    studentDropdown.onchange = e => loadPreviousReviews(e.target.value);
+  } catch (err) {
     alert('Failed to load batch or student data.');
-    console.error(error);
+    console.error(err);
   }
 });
 
@@ -313,7 +299,7 @@ async function loadPreviousReviews(studentId) {
     const res = await fetch(`${API_BASE}/reviews?studentId=${encodeURIComponent(studentId)}`, { headers: { 'Authorization': 'Bearer ' + token } });
     const data = await res.json();
 
-    if (!data || data.length === 0) { alert("No previous reviews found for this student"); return; }
+    if (!data || data.length === 0) return;
 
     document.querySelectorAll('.review').forEach(reviewDiv => {
       reviewDiv.querySelector('textarea').value = '';
@@ -330,7 +316,6 @@ async function loadPreviousReviews(studentId) {
           reviewDiv.querySelectorAll('.marks-input').forEach((input, idx) => {
             if (r.marks && r.marks[idx]) input.value = r.marks[idx].mark || '';
           });
-
           if (studentReview.files && studentReview.files.length > 0) {
             let fileLinksDiv = reviewDiv.querySelector('.file-links');
             if (!fileLinksDiv) {
@@ -351,9 +336,8 @@ async function loadPreviousReviews(studentId) {
         }
       });
     });
-    alert("Previous reviews and documents loaded.");
+
   } catch (err) {
-    alert("Error fetching previous reviews");
     console.error(err);
   }
 }
@@ -369,6 +353,5 @@ function showReview(index) {
   document.getElementById('tab-' + index).classList.add('active');
 }
 </script>
-
 </body>
 </html>

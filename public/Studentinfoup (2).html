@@ -135,10 +135,11 @@
     </table>
 
     <div class="center">
-      <button type="button" class="btn" onclick="addRow()">Add New Student</button>
-      <button type="submit" class="btn">Save Data</button>
-      <a href="documents.html" class="btn">View Documents</a>
-    </div>
+  <button type="button" class="btn" onclick="addRow()">Add New Student</button>
+  <button type="submit" class="btn">Save Data</button>
+  <button type="button" class="btn" onclick="viewDocuments()">View Documents</button>
+</div>
+
   </form>
 </div>
 
@@ -267,6 +268,15 @@
   function signOut() {
     localStorage.removeItem('token');
     window.location.href = 'login_page.html';
+  }
+  function viewDocuments() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("Please login first.");
+      window.location.href = "login_page.html";
+      return;
+    }
+    window.location.href = "documents.html";
   }
 </script>
 
