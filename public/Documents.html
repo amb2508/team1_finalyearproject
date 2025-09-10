@@ -208,24 +208,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-const API_BASE = "";
+const API_BASE = ""; // same domain
+
 const urlParams = new URLSearchParams(window.location.search);
 const batchParam = urlParams.get('batch');
 const studentIdParam = urlParams.get('studentId');
 
-if (!batchParam || !studentIdParam) {
-  alert('No student selected. Redirecting back.');
-  window.location.href = 'Studentinfoup (2).html';
-}
-
-// Use batchParam and studentIdParam to preselect student & batch
-document.getElementById('batchLabel').textContent = `Batch: ${batchParam}`;
-const studentDropdown = document.getElementById('studentDropdown');
-
-// Populate dropdown (or select student) based on studentIdParam
-studentDropdown.value = studentIdParam;
-
-// Navigation
+// Navigation functions
 function goBack() { window.location.href = "Studentinfoup (2).html"; }
 function home() { window.location.href = "index.html"; }
 function signOut() { localStorage.removeItem('token'); window.location.href = "login_page.html"; }
@@ -269,7 +258,7 @@ async function sendReview(route) {
   }
 }
 
-// Load students on page load
+// Load students & batch info on page load
 window.addEventListener('DOMContentLoaded', async () => {
   const token = localStorage.getItem('token');
   if (!token) { alert('Please login first.'); window.location.href = 'login_page.html'; return; }
@@ -284,7 +273,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const batchRecord = data[0];
+    // Select batch based on query param or first batch
+    const batchRecord = batchParam ? data.find(b => b.batch === batchParam) || data[0] : data[0];
     document.getElementById('batchLabel').textContent =
       `Batch: ${batchRecord.batch} | Project: ${batchRecord.projectTitle}`;
 
@@ -297,8 +287,18 @@ window.addEventListener('DOMContentLoaded', async () => {
       studentDropdown.appendChild(option);
     });
 
-    if (batchRecord.students.length) loadPreviousReviews(batchRecord.students[0].regNo);
+    // Preselect student from query param if present
+    if (studentIdParam) {
+      const exists = Array.from(studentDropdown.options).some(opt => opt.value === studentIdParam);
+      if (exists) studentDropdown.value = studentIdParam;
+    }
+
+    // Load reviews for selected student
+    if (studentDropdown.value) loadPreviousReviews(studentDropdown.value);
+
+    // On student change
     studentDropdown.onchange = e => loadPreviousReviews(e.target.value);
+
   } catch (err) {
     alert('Failed to load batch or student data.');
     console.error(err);
@@ -314,14 +314,14 @@ async function loadPreviousReviews(studentId) {
     const res = await fetch(`${API_BASE}/reviews?studentId=${encodeURIComponent(studentId)}`, { headers: { 'Authorization': 'Bearer ' + token } });
     const data = await res.json();
 
-    if (!data || data.length === 0) return;
-
     document.querySelectorAll('.review').forEach(reviewDiv => {
       reviewDiv.querySelector('textarea').value = '';
       reviewDiv.querySelectorAll('.marks-input').forEach(input => input.value = '');
       const fileLinksDiv = reviewDiv.querySelector('.file-links');
       if (fileLinksDiv) fileLinksDiv.innerHTML = '';
     });
+
+    if (!data || data.length === 0) return;
 
     data.forEach(studentReview => {
       studentReview.reviews.forEach(r => {
@@ -331,6 +331,7 @@ async function loadPreviousReviews(studentId) {
           reviewDiv.querySelectorAll('.marks-input').forEach((input, idx) => {
             if (r.marks && r.marks[idx]) input.value = r.marks[idx].mark || '';
           });
+
           if (studentReview.files && studentReview.files.length > 0) {
             let fileLinksDiv = reviewDiv.querySelector('.file-links');
             if (!fileLinksDiv) {
@@ -368,5 +369,6 @@ function showReview(index) {
   document.getElementById('tab-' + index).classList.add('active');
 }
 </script>
+
 </body>
 </html>
