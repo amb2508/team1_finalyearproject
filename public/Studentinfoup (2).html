@@ -190,18 +190,19 @@
   }
   function goToDocuments() {
   const batch = document.getElementById('batchInput').value.trim();
-  const studentDropdown = document.getElementById('studentDropdown');
-  const studentId = studentDropdown.value;
+  const studentInput = studentTableBody.querySelector('tr input[name^="reg"]');
+  const studentId = studentInput ? studentInput.value.trim() : null;
 
   if (!batch || !studentId) {
     alert("Please select a batch and student first!");
     return;
   }
 
-  // Pass via query params
+  // Pass batch and studentId as query parameters
   const url = `documents.html?batch=${encodeURIComponent(batch)}&studentId=${encodeURIComponent(studentId)}`;
   window.location.href = url;
 }
+
 
 
   function addRow() {
@@ -285,15 +286,7 @@
     localStorage.removeItem('token');
     window.location.href = 'login_page.html';
   }
-  function viewDocuments() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert("Please login first.");
-      window.location.href = "login_page.html";
-      return;
-    }
-    window.location.href = "documents.html";
-  }
+  
 </script>
 
 </body>
