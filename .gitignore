@@ -13,3 +13,6 @@ pnpm-debug.log*
 # OS-specific
 .DS_Store
 Thumbs.db
+"node_modules/" 
+".env" 
+"uploads/" 
