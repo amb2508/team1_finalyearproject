@@ -65,8 +65,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'registration.html'));
 });
 
-// Catch-all for non-API routes (Express v5 safe)
-app.get(/.*/, (req, res, next) => {
+// Explicit route for documents.html
+app.get('/documents.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'documents.html'));
+});
+
+// Catch-all for non-API routes (SPA fallback)
+app.get('*', (req, res, next) => {
   const apiRoutes = [
     '/register','/teacher-login','/forgot-password',
     '/batches','/studentinfo','/saveReview',
@@ -77,8 +82,8 @@ app.get(/.*/, (req, res, next) => {
   // Let static file requests through
   if (path.extname(req.path)) return next();
 
-  // Default SPA fallback (you can replace with registration.html if you prefer)
-  return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // Default SPA fallback
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 /** ---------------------------
@@ -281,4 +286,3 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 
 // Start server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
