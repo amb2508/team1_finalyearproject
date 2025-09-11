@@ -60,13 +60,13 @@ mongoose.connect(process.env.MONGO_URI)
  * --------------------------- */
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Root route → serve registration.html (default page)
+// Root route → serve registration.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'registration.html'));
 });
 
-// SPA fallback: only for clean URLs, not static files or API routes
-app.get('*', (req, res, next) => {
+// Catch-all for non-API routes (Express v5 safe)
+app.get(/.*/, (req, res, next) => {
   const apiRoutes = [
     '/register','/teacher-login','/forgot-password',
     '/batches','/studentinfo','/saveReview',
@@ -74,11 +74,11 @@ app.get('*', (req, res, next) => {
   ];
   if (apiRoutes.some(r => req.path.startsWith(r))) return next();
 
-  // If request has a file extension (.html, .css, .js, etc.) → let express.static handle it
+  // Let static file requests through
   if (path.extname(req.path)) return next();
 
-  // Otherwise fallback to index.html (if you add SPA routing)
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // Default SPA fallback (you can replace with registration.html if you prefer)
+  return res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 /** ---------------------------
@@ -281,3 +281,4 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 
 // Start server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
