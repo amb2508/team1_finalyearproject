@@ -66,8 +66,8 @@ app.get('/', (req, res) => {
 });
 
 // Explicit route for documents.html
-app.get('/documents.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'documents.html'));
+app.get('/Documents.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Documents.html'));
 });
 
 // ✅ Catch-all for non-API routes (Express 5 safe)
