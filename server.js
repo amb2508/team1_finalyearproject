@@ -60,20 +60,25 @@ mongoose.connect(process.env.MONGO_URI)
  * --------------------------- */
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve SPA safely (avoid path-to-regexp error)
-app.use((req, res, next) => {
+// Root route → serve registration.html (default page)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'registration.html'));
+});
+
+// SPA fallback: only for clean URLs, not static files or API routes
+app.get('*', (req, res, next) => {
   const apiRoutes = [
     '/register','/teacher-login','/forgot-password',
     '/batches','/studentinfo','/saveReview',
     '/submitReview','/reviews'
   ];
-  if (apiRoutes.some(r => req.path.startsWith(r))) return next(); // skip API routes
+  if (apiRoutes.some(r => req.path.startsWith(r))) return next();
 
-  // Serve registration.html as default page
-  if (req.method === 'GET' && req.headers.accept && req.headers.accept.includes('text/html')) {
-    return res.sendFile(path.join(__dirname, 'public', 'registration.html'));
-  }
-  next();
+  // If request has a file extension (.html, .css, .js, etc.) → let express.static handle it
+  if (path.extname(req.path)) return next();
+
+  // Otherwise fallback to index.html (if you add SPA routing)
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 /** ---------------------------
@@ -273,9 +278,6 @@ app.get('/reviews', auth, async (req, res) => {
 
 // Serve uploaded files
 app.use('/uploads', express.static(UPLOAD_DIR));
-
-// Backend check
-app.get('/', (req, res) => res.json({ message: 'Backend running' }));
 
 // Start server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
