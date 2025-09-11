@@ -214,6 +214,9 @@ const urlParams = new URLSearchParams(window.location.search);
 const batchParam = urlParams.get('batch');
 const studentIdParam = urlParams.get('studentId');
 
+// ✅ Removed any forced redirect if params are missing
+// Page will still load even with no query params
+
 // Navigation functions
 function goBack() { window.location.href = "Studentinfoup (2).html"; }
 function home() { window.location.href = "index.html"; }
@@ -273,7 +276,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Select batch based on query param or first batch
+    // Select batch based on query param or default to first batch
     const batchRecord = batchParam ? data.find(b => b.batch === batchParam) || data[0] : data[0];
     document.getElementById('batchLabel').textContent =
       `Batch: ${batchRecord.batch} | Project: ${batchRecord.projectTitle}`;
@@ -293,10 +296,12 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (exists) studentDropdown.value = studentIdParam;
     }
 
-    // Load reviews for selected student
-    if (studentDropdown.value) loadPreviousReviews(studentDropdown.value);
+    // Load reviews if a student is selected
+    if (studentDropdown.value) {
+      loadPreviousReviews(studentDropdown.value);
+    }
 
-    // On student change
+    // Change student selection handler
     studentDropdown.onchange = e => loadPreviousReviews(e.target.value);
 
   } catch (err) {
@@ -311,9 +316,12 @@ async function loadPreviousReviews(studentId) {
     const token = localStorage.getItem('token');
     if (!token) { alert("Please login first."); window.location.href = "login_page.html"; return; }
 
-    const res = await fetch(`${API_BASE}/reviews?studentId=${encodeURIComponent(studentId)}`, { headers: { 'Authorization': 'Bearer ' + token } });
+    const res = await fetch(`${API_BASE}/reviews?studentId=${encodeURIComponent(studentId)}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
     const data = await res.json();
 
+    // Clear all fields first
     document.querySelectorAll('.review').forEach(reviewDiv => {
       reviewDiv.querySelector('textarea').value = '';
       reviewDiv.querySelectorAll('.marks-input').forEach(input => input.value = '');
@@ -321,8 +329,10 @@ async function loadPreviousReviews(studentId) {
       if (fileLinksDiv) fileLinksDiv.innerHTML = '';
     });
 
+    // ✅ If no reviews exist, just keep empty page (don’t redirect)
     if (!data || data.length === 0) return;
 
+    // Populate existing reviews
     data.forEach(studentReview => {
       studentReview.reviews.forEach(r => {
         const reviewDiv = document.getElementById('review-' + r.reviewNumber);

@@ -191,18 +191,12 @@
   function goToDocuments() {
   const batch = document.getElementById('batchInput').value.trim();
   const studentInput = studentTableBody.querySelector('tr input[name^="reg"]');
-  const studentId = studentInput ? studentInput.value.trim() : null;
+  const studentId = studentInput ? studentInput.value.trim() : "";
 
-  if (!batch || !studentId) {
-    alert("Please select a batch and student first!");
-    return;
-  }
-
-  // Pass batch and studentId as query parameters
+  // Always redirect, even if empty
   const url = `documents.html?batch=${encodeURIComponent(batch)}&studentId=${encodeURIComponent(studentId)}`;
   window.location.href = url;
 }
-
 
 
   function addRow() {
