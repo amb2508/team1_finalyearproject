@@ -70,8 +70,8 @@ app.get('/documents.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'documents.html'));
 });
 
-// Catch-all for non-API routes (SPA fallback)
-app.get('*', (req, res, next) => {
+// ✅ Catch-all for non-API routes (Express 5 safe)
+app.use((req, res, next) => {
   const apiRoutes = [
     '/register','/teacher-login','/forgot-password',
     '/batches','/studentinfo','/saveReview',
